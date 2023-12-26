@@ -4,45 +4,32 @@ from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 import random
-from MediapipeArchivo import VentanaPrincipal
 
 #Constructor
-class parametros_construc():
-    # contador = 0
-    # if contador <= 0:
-    #     random.choice()
-    #     contador += 1
-
+class parametros_construc:
     #Atributos
     def __init__(self, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada) -> None:
         self.varPuntoYDer = puntoYDerecha
         self.varPuntoYIzq = puntoYIzquierda
         self.varManoDCerrada = manoDerechaCerrada
         self.varManoICerrada = manoIzquierdaCerrada
-        self.preg_1()
-        self.preg_2()
-
 
     #Preguntas/eventos
     def preg_1(self):
-        imagen = self.lblimagen2.setSt7yleSheet("border: 30px solid red; border-radius: 50px;")
-        return imagen
-        #self.lblimagen1.setPixmap(QPixmap("Imagenes/Rusia.jpg").scaled(self.lbl_cicloWhile.size(), aspectRatioMode=True))
-        # self.lblimagen2.setPixmap(QPixmap("Imagenes/Rusia.jpg").scaled(self.lbl_cicloWhile.size(), aspectRatioMode=True))
-
-        # #bloqueador = False
-        # if self.varPuntoYDer == True:
-        #     self.lblimagen2.setStyleSheet("border: 10px solid blue;")
-
-        # if self.varPuntoYIzq == True:
-        #     self.lblimagen1.setStyleSheet("border: 10px solid blue;")
+        pass
 
     def preg_2(self):
-        #self.lblimagen1.setPixmap(QPixmap("Imagenes/Rusia.jpg").scaled(self.lbl_cicloWhile.size(), aspectRatioMode=True))
-        imagen = VentanaPrincipal.lblimagen1.setStyleSheet("border: 30px solid red; border-radius: 50px;")
-        return imagen
+        tituloPregunta = "¿Cuál es el animal más grande del mundo?"
+        tamañoFuente = "72px"
+        imagen1 = "Imagenes/ballena.jpg"
+        imagen2 = "Imagenes/leon.jpeg"
+        return imagen1, imagen2, tituloPregunta, tamañoFuente
         
-
-
-#Por hacer:
-#-crear las preguntas en un modulo
+        
+    def preg_3(self):
+        tituloPregunta = "¿Cuál es el país más grande del mundo?"
+        tamañoFuente = "72px"
+        imagen1 = "Imagenes\El salvador.jpg"
+        imagen2 = "Imagenes\Rusia.jpg"
+        return imagen1, imagen2, tituloPregunta, tamañoFuente
+        

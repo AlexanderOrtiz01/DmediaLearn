@@ -5,10 +5,12 @@ import math
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog,QLabel, QMainWindow
 from PyQt5.uic import loadUi
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt,QFile
+from PyQt5.QtGui import QPixmap
+import random
 
 from ventanas import preguntas
-import random
+
 
 
 
@@ -37,10 +39,14 @@ def calcularDistanciaDedos(dedo, muñeca):
     x1, y1, z1 = dedo.x, dedo.y, dedo.z
     x2, y2, z2 = muñeca.x, muñeca.y, muñeca.z
 
-    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 4)))  # <----------(abs(z1 * 2))) Distacia 
+    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 2)))  # <----------(abs(z1 * 2))) Distacia 
     return distancia
     #-------------------------------------------------------------------------------
 
+
+
+puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada = 0, 0, 0, 0
+instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
 class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     def __init__(self):
         super().__init__()
@@ -49,19 +55,32 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.setWindowTitle("Preguntas y Respuestas")
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.showFullScreen()
+
+        #Elige una pregunta al azar
+        preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
+        preguntasRandom = random.choice(preguntasRandom)
+
+        #Establece la pregunta en ventana
+        self.lblTitulo.setText(preguntasRandom()[2])
+        self.lblTitulo.setStyleSheet(f"color: white; font-size: {preguntasRandom()[3]};")
+
+        #Establece las imagenes en ventana
+        self.lblimagen1.setPixmap(QPixmap(preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
+        self.lblimagen2.setPixmap(QPixmap(preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
+
         self.funcion_Mediapipe()
-        self.labelImagenDVar = self.findChild(QLabel, "lblimagen2")
-        self.labelImagenIVar = self.findChild(QLabel, "lblimagen1")
+
+        # self.labelImagenDVar = self.findChild(QLabel, "lblimagen2")
+        # self.labelImagenIVar = self.findChild(QLabel, "lblimagen1")
 
 
     def funcion_Mediapipe(self):
         mp_drawing = mp.solutions.drawing_utils
         mp_holistic = mp.solutions.holistic
 
-        puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada = 0, 0, 0, 0
-
-        #instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
         cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
+        controladorIfManoCerrada = 0 # <-----------variable pendiente de uso
 
         with mp_holistic.Holistic(
             static_image_mode=False,
@@ -190,9 +209,13 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 #Preguntas
                 #instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
                 #texto en pantalla de puntos Y
+                
                 if puntoYDerecha == True:
                     cv2.putText(frame, "Derecha Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     self.lblimagen2.setStyleSheet("border: 30px solid red; border-radius: 50px;")
+                    if manoDerechaCerrada == True:
+                        self.lblimagen2.setStyleSheet("border: 30px solid green; border-radius: 50px;")
+                        
                     #instaciaPreguntas.preg_1()
                     #self.lbl_cicloWhile.setText("Arriba")
                     #self.close()
@@ -205,6 +228,8 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 if puntoYIzquierda == True:
                     cv2.putText(frame, "Izquierda Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     self.lblimagen1.setStyleSheet("border: 30px solid red; border-radius: 50px;")
+                    if manoIzquierdaCerrada == True:
+                        self.lblimagen1.setStyleSheet("border: 30px solid green; border-radius: 50px;")
                     #instaciaPreguntas.preg_2()
                     QApplication.processEvents()
                 else:
