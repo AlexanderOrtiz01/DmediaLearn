@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import math
 
+import keyboard
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog,QLabel, QMainWindow
 from PyQt5.uic import loadUi
@@ -10,6 +11,7 @@ from PyQt5.QtGui import QPixmap
 import random
 
 from ventanas import preguntas
+
 
 
 
@@ -57,16 +59,16 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.showFullScreen()
 
         #Elige una pregunta al azar
-        preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
-        preguntasRandom = random.choice(preguntasRandom)
+        self.preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
+        self.preguntasRandom = random.choice(self.preguntasRandom)
 
         #Establece la pregunta en ventana
-        self.lblTitulo.setText(preguntasRandom()[2])
-        self.lblTitulo.setStyleSheet(f"color: white; font-size: {preguntasRandom()[3]};")
+        self.lblTitulo.setText(self.preguntasRandom()[2])
+        self.lblTitulo.setStyleSheet(f"color: white; font-size: {self.preguntasRandom()[3]}; font-family: Comic Sans MS;")
 
         #Establece las imagenes en ventana
-        self.lblimagen1.setPixmap(QPixmap(preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
-        self.lblimagen2.setPixmap(QPixmap(preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
+        self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
+        self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
 
         self.funcion_Mediapipe()
 
@@ -181,10 +183,10 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     
                     yI= puntoMuñecaIzquierda.y
                     yD = puntoMuñecaDerecha.y
-                    if yI <= 0.3:
+                    if yI <= 0.4:
                         puntoYIzquierda = True
 
-                    if yD <= 0.3:
+                    if yD <= 0.4:
                         puntoYDerecha = True
 
 
@@ -209,13 +211,13 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 #Preguntas
                 #instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
                 #texto en pantalla de puntos Y
-                
+                opcionCorrectaVar = None
                 if puntoYDerecha == True:
                     cv2.putText(frame, "Derecha Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    self.lblimagen2.setStyleSheet("border: 30px solid red; border-radius: 50px;")
+                    self.lblimagen2.setStyleSheet("border: 30px solid #ffbe0b; border-radius: 50px;")
                     if manoDerechaCerrada == True:
-                        self.lblimagen2.setStyleSheet("border: 30px solid green; border-radius: 50px;")
-                        
+                        self.lblimagen2.setStyleSheet("border: 30px solid #d59e09; border-radius: 50px;")
+                        opcionCorrectaVar = self.preguntasRandom()[5]
                     #instaciaPreguntas.preg_1()
                     #self.lbl_cicloWhile.setText("Arriba")
                     #self.close()
@@ -227,9 +229,10 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     
                 if puntoYIzquierda == True:
                     cv2.putText(frame, "Izquierda Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    self.lblimagen1.setStyleSheet("border: 30px solid red; border-radius: 50px;")
+                    self.lblimagen1.setStyleSheet("border: 30px solid #ffbe0b; border-radius: 50px;")
                     if manoIzquierdaCerrada == True:
-                        self.lblimagen1.setStyleSheet("border: 30px solid green; border-radius: 50px;")
+                        self.lblimagen1.setStyleSheet("border: 30px solid #d59e09; border-radius: 50px;")
+                        opcionCorrectaVar = self.preguntasRandom()[4]
                     #instaciaPreguntas.preg_2()
                     QApplication.processEvents()
                 else:
@@ -237,8 +240,21 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     self.lblimagen1.setStyleSheet("border: none;")
                     QApplication.processEvents()
                 
+                if opcionCorrectaVar == True:
+                    if manoDerechaCerrada == True:
+                        self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    if manoIzquierdaCerrada == True:
+                        self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    break
 
-
+                if opcionCorrectaVar == False:
+                    if manoDerechaCerrada == True:
+                        self.lblimagen2.setStyleSheet("border: 30px solid #ff3131; border-radius: 50px;")
+                        self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    if manoIzquierdaCerrada == True:
+                        self.lblimagen1.setStyleSheet("border: 30px solid #ff3131; border-radius: 50px;")
+                        self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    break
 
 
 
@@ -259,8 +275,21 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 if cv2.waitKey(1) & 0xFF == 27:
                     break
 
-        cap.release() #Libera los recursos de cv2.VideoCapture()
-        cv2.destroyAllWindows()
+        #cap.release() #Libera los recursos de cv2.VideoCapture()
+        #cv2.destroyAllWindows()
+        
+        # while opcionCorrectaVar == True or opcionCorrectaVar == False:
+        #     if event.waitKey() == 32:
+        #         break
+            
+
+        # while opcionCorrectaVar == True or opcionCorrectaVar == False:
+        #     if keyboard.is_pressed('space'):
+        #         VentanaPrincipal.close(self)
+        #         VentanaPrincipal()
+        #         break
+        
+        
     
 if __name__ == "__main__": #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo
     app = QApplication(sys.argv)
