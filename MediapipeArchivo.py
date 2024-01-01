@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import math
 
-import keyboard
+#import keyboard
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog,QLabel, QMainWindow
 from PyQt5.uic import loadUi
@@ -11,10 +11,7 @@ from PyQt5.QtGui import QPixmap
 import random
 
 from ventanas import preguntas
-
-
-
-
+from pynput import keyboard
 
 
     #--------------------Funciones------------------------------------------
@@ -45,8 +42,6 @@ def calcularDistanciaDedos(dedo, muñeca):
     return distancia
     #-------------------------------------------------------------------------------
 
-
-
 puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada = 0, 0, 0, 0
 instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
 class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
@@ -72,9 +67,18 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
         self.funcion_Mediapipe()
 
-        # self.labelImagenDVar = self.findChild(QLabel, "lblimagen2")
-        # self.labelImagenIVar = self.findChild(QLabel, "lblimagen1")
+        self.listener = keyboard.Listener(on_press=self.reiniciar_ventana)
+        self.listener.start()
 
+    def reiniciar_ventana(self, key):
+        if key == keyboard.Key.enter:  # Aquí puedes cambiar la tecla que desees
+            print("Se ha presionado la tecla Enter")
+            self.ventana_principal = VentanaPrincipal()  # Crear una nueva instancia de la ventana
+            #self.ventana_principal.close()  # Cerrar la ventana actual
+            self.ventana_principal.show()  # Mostrar la nueva ventana
+            QApplication.processEvents()
+
+        
 
     def funcion_Mediapipe(self):
         mp_drawing = mp.solutions.drawing_utils
@@ -268,30 +272,29 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 cv2.putText(frame, f"Punto x: {puntoXDedoStr2}", (800, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 cv2.putText(frame, f"Punto y: {puntoYDedoStr2}", (800, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 cv2.putText(frame, f"Punto Z: {puntoZDedoStr2}", (800, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-
-                
-
-                cv2.imshow("Frame", frame)
-                if cv2.waitKey(1) & 0xFF == 27:
-                    break
-
-        #cap.release() #Libera los recursos de cv2.VideoCapture()
-        #cv2.destroyAllWindows()
         
-        # while opcionCorrectaVar == True or opcionCorrectaVar == False:
-        #     if event.waitKey() == 32:
-        #         break
+        cap.release() #Libera los recursos de cv2.VideoCapture()
+        cv2.destroyAllWindows()
+    
             
 
-        # while opcionCorrectaVar == True or opcionCorrectaVar == False:
-        #     if keyboard.is_pressed('space'):
-        #         VentanaPrincipal.close(self)
-        #         VentanaPrincipal()
-        #         break
-        
-        
+                #cv2.imshow("Frame", frame)
+                # if cv2.waitKey(1) & 0xFF == 27:
+                #     break
+
+        # while True:
+        #     if cv2.waitKey(1) & 0xFF == 27:
+        #             VentanaPrincipal.close(self)
+        #             VentanaPrincipal()
+        #             break
     
-if __name__ == "__main__": #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo
+#     def pulsa(tecla):
+# 	    print('Se ha pulsado la tecla ' + str(tecla))
+
+# with kb.Listener(pulsa) as escuchador:
+#     escuchador.join()
+    
+if __name__ == "__main__": #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
     app = QApplication(sys.argv)
     ventana = VentanaPrincipal()
     ventana.show()
