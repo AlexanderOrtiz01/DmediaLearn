@@ -42,8 +42,7 @@ def calcularDistanciaDedos(dedo, muñeca):
     return distancia
     #-------------------------------------------------------------------------------
 
-puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada = 0, 0, 0, 0
-instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
+instaciaPreguntas = preguntas
 class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     def __init__(self):
         super().__init__()
@@ -65,17 +64,28 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
         self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
 
-        self.funcion_Mediapipe()
-
         self.listener = keyboard.Listener(on_press=self.reiniciar_ventana)
         self.listener.start()
 
+        self.controladorDePausa = False #<--- Hace que la opcion de eleccion de preguntas se detecta a pesar de continuar el bucle
+        self.funcion_Mediapipe()
+
+
     def reiniciar_ventana(self, key):
         if key == keyboard.Key.enter:  # Aquí puedes cambiar la tecla que desees
+            #Elige una pregunta al azar
+            self.preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
+            self.preguntasRandom = random.choice(self.preguntasRandom)
+
+            #Establece la pregunta en ventana
+            self.lblTitulo.setText(self.preguntasRandom()[2])
+            self.lblTitulo.setStyleSheet(f"color: white; font-size: {self.preguntasRandom()[3]}; font-family: Comic Sans MS;")
+
+            #Establece las imagenes en ventana
+            self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
+            self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
+            self.controladorDePausa = False
             print("Se ha presionado la tecla Enter")
-            self.ventana_principal = VentanaPrincipal()  # Crear una nueva instancia de la ventana
-            #self.ventana_principal.close()  # Cerrar la ventana actual
-            self.ventana_principal.show()  # Mostrar la nueva ventana
             QApplication.processEvents()
 
         
@@ -216,7 +226,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 #instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
                 #texto en pantalla de puntos Y
                 opcionCorrectaVar = None
-                if puntoYDerecha == True:
+                if puntoYDerecha == True and self.controladorDePausa == False:
                     cv2.putText(frame, "Derecha Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     self.lblimagen2.setStyleSheet("border: 30px solid #ffbe0b; border-radius: 50px;")
                     if manoDerechaCerrada == True:
@@ -226,12 +236,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     #self.lbl_cicloWhile.setText("Arriba")
                     #self.close()
                     QApplication.processEvents()
-                else:
+                elif self.controladorDePausa == False:
                     #self.lbl_cicloWhile.setText("Abajo")
                     self.lblimagen2.setStyleSheet("border: none;")
                     QApplication.processEvents()
                     
-                if puntoYIzquierda == True:
+                if puntoYIzquierda == True and self.controladorDePausa == False:
                     cv2.putText(frame, "Izquierda Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     self.lblimagen1.setStyleSheet("border: 30px solid #ffbe0b; border-radius: 50px;")
                     if manoIzquierdaCerrada == True:
@@ -239,27 +249,37 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                         opcionCorrectaVar = self.preguntasRandom()[4]
                     #instaciaPreguntas.preg_2()
                     QApplication.processEvents()
-                else:
+                    
+                elif self.controladorDePausa == False:
                     #self.lbl_cicloWhile.setText("Abajo")
                     self.lblimagen1.setStyleSheet("border: none;")
                     QApplication.processEvents()
                 
-                if opcionCorrectaVar == True:
+
+
+                if opcionCorrectaVar == True and self.controladorDePausa == False:
                     if manoDerechaCerrada == True:
                         self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    
                     if manoIzquierdaCerrada == True:
                         self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
-                    break
+                    
+                    self.controladorDePausa = True
+                    QApplication.processEvents()
 
-                if opcionCorrectaVar == False:
+                if opcionCorrectaVar == False and self.controladorDePausa == False:
                     if manoDerechaCerrada == True:
                         self.lblimagen2.setStyleSheet("border: 30px solid #ff3131; border-radius: 50px;")
                         self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
+                    
                     if manoIzquierdaCerrada == True:
                         self.lblimagen1.setStyleSheet("border: 30px solid #ff3131; border-radius: 50px;")
                         self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
-                    break
-
+                    
+                    self.controladorDePausa = True
+                    QApplication.processEvents()
+                
+                QApplication.processEvents()
 
 
 
@@ -273,12 +293,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 cv2.putText(frame, f"Punto y: {puntoYDedoStr2}", (800, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 cv2.putText(frame, f"Punto Z: {puntoZDedoStr2}", (800, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
         
-        cap.release() #Libera los recursos de cv2.VideoCapture()
-        cv2.destroyAllWindows()
+        #cap.release() #Libera los recursos de cv2.VideoCapture()
+        #cv2.destroyAllWindows()
     
             
 
-                #cv2.imshow("Frame", frame)
+                cv2.imshow("Frame", frame)
                 # if cv2.waitKey(1) & 0xFF == 27:
                 #     break
 
