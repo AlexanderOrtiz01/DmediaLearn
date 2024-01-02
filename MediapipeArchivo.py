@@ -53,8 +53,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.showFullScreen()
 
         #Elige una pregunta al azar
-        self.preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
-        self.preguntasRandom = random.choice(self.preguntasRandom)
+        self.preguntasRandomLista = [getattr(instaciaPreguntas, nombre) for nombre in dir(instaciaPreguntas) if callable(getattr(instaciaPreguntas, nombre))]
+        #self.preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
+        self.preguntasRandom = random.choice(self.preguntasRandomLista)
 
         #Establece la pregunta en ventana
         self.lblTitulo.setText(self.preguntasRandom()[2])
@@ -63,6 +64,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         #Establece las imagenes en ventana
         self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
         self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
+
+        #Permite que no se repitan las preguntas
+        self.preguntasRandomLista.remove(self.preguntasRandom)
 
         self.listener = keyboard.Listener(on_press=self.reiniciar_ventana)
         self.listener.start()
@@ -74,8 +78,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     def reiniciar_ventana(self, key):
         if key == keyboard.Key.enter:  # Aquí puedes cambiar la tecla que desees
             #Elige una pregunta al azar
-            self.preguntasRandom = [instaciaPreguntas.preg_2, instaciaPreguntas.preg_3]
-            self.preguntasRandom = random.choice(self.preguntasRandom)
+            self.preguntasRandom = random.choice(self.preguntasRandomLista)
 
             #Establece la pregunta en ventana
             self.lblTitulo.setText(self.preguntasRandom()[2])
@@ -84,7 +87,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
             #Establece las imagenes en ventana
             self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
             self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
+
             self.controladorDePausa = False
+            self.preguntasRandomLista.remove(self.preguntasRandom)
             print("Se ha presionado la tecla Enter")
             QApplication.processEvents()
 
@@ -298,7 +303,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     
             
 
-                cv2.imshow("Frame", frame)
+                #cv2.imshow("Frame", frame)
                 # if cv2.waitKey(1) & 0xFF == 27:
                 #     break
 
