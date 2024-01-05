@@ -1,5 +1,8 @@
-label#lblTitulo {
+/* estilos */
+
+/* Estilo del numero de la pregunta */
+#lblNumPregunta {
     color: white;
-    font-size: 100%;
-    
+    font-size: 100px;
+    font-family: Comic Sans MS;
 }

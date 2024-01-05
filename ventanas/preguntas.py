@@ -1,4 +1,4 @@
-#Preguntas
+# Preguntas
 def preg_1():
     tituloPregunta = "¿Cuál es el color del cielo?"
     tamañoFuente = "72px"

@@ -19,16 +19,6 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="lblNumPregunta">
-      <property name="text">
-       <string>N°</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QLabel" name="lblTitulo">
       <property name="text">
        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:72pt; color:#ffffff;&quot;&gt;¿Cuál es el país más grande del mundo?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -105,32 +95,6 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>80</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblimgReaccion">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="scaledContents">
-         <bool>false</bool>
-        </property>
-        <property name="wordWrap">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_4">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
           <height>20</height>
          </size>
         </property>

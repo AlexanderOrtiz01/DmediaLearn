@@ -7,11 +7,13 @@ import sys
 from PyQt5.QtWidgets import QApplication, QDialog,QLabel, QMainWindow
 from PyQt5.uic import loadUi
 from PyQt5.QtCore import Qt,QFile
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QMovie
 import random
 
 from ventanas import preguntas
+from ventanas import gifs
 from pynput import keyboard
+
 
 
     #--------------------Funciones------------------------------------------
@@ -42,7 +44,13 @@ def calcularDistanciaDedos(dedo, muñeca):
     return distancia
     #-------------------------------------------------------------------------------
 
+#Instancias de los modulos y estilo
 instaciaPreguntas = preguntas
+instanciaGiftsCorrectos = gifs.gifts_correctos
+instanciaGiftsIncorrectos = gifs.gifts_incorrectos
+estiloCss = "style/style.css"
+
+#Numero de la pregunta en pantalla
 class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     def __init__(self):
         super().__init__()
@@ -68,17 +76,33 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         #Permite que no se repitan las preguntas
         self.preguntasRandomLista.remove(self.preguntasRandom)
 
+        #Detecta la tecla enter para dar paso a la siguiente pregunta
         self.listener = keyboard.Listener(on_press=self.reiniciar_ventana)
         self.listener.start()
 
-        self.controladorDePausa = False #<--- Hace que la opcion de eleccion de preguntas se detecta a pesar de continuar el bucle
+        #Asigna el numero a la pregunta
+        self.numeroPregunta = 1
+        self.lblNumPregunta.setText(str(self.numeroPregunta))
+        self.lblNumPregunta.setStyleSheet(open(estiloCss).read())
+
+        self.controladorDePausa = False #<--- Hace que la opcion de eleccion de preguntas se detecta a pesar de continuar el bucle de la funcion de mediapipe
         self.funcion_Mediapipe()
 
 
     def reiniciar_ventana(self, key):
-        if key == keyboard.Key.enter:  # Aquí puedes cambiar la tecla que desees
+        if key == keyboard.Key.enter:
             #Elige una pregunta al azar
             self.preguntasRandom = random.choice(self.preguntasRandomLista)
+
+            #Quita el gif del label
+            self.lblimgReaccion.clear()
+
+            #Suma el numero de la pregunta
+            self.numeroPregunta += 1
+
+            #Numero de la pregunta en pantalla
+            self.lblNumPregunta.setText(str(self.numeroPregunta))
+            self.lblNumPregunta.setStyleSheet(open(estiloCss).read())
 
             #Establece la pregunta en ventana
             self.lblTitulo.setText(self.preguntasRandom()[2])
@@ -90,6 +114,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
             self.controladorDePausa = False
             self.preguntasRandomLista.remove(self.preguntasRandom)
+            
             print("Se ha presionado la tecla Enter")
             QApplication.processEvents()
 
@@ -210,8 +235,8 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
 
                 
-
-                frame = cv2.flip(frame, 1) #Invierte la imagen
+                #Invierte la imagen
+                frame = cv2.flip(frame, 1)
 
                 #Texto en pantalla
                 cv2.putText(frame, "Numero de dedos: "+ str(dedos), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
@@ -227,8 +252,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
 
 
-                #Preguntas
-                #instaciaPreguntas = preguntas.parametros_construc(puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada)
+                #Logica de las preguntas
                 #texto en pantalla de puntos Y
                 opcionCorrectaVar = None
                 if puntoYDerecha == True and self.controladorDePausa == False:
@@ -269,7 +293,13 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     if manoIzquierdaCerrada == True:
                         self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
                     
+                    #Coloca el gif en pantalla
+                    self.cargaGift = QMovie(instanciaGiftsCorrectos())
+                    self.lblimgReaccion.setMovie(self.cargaGift)
+                    self.cargaGift.start()
+
                     self.controladorDePausa = True
+
                     QApplication.processEvents()
 
                 if opcionCorrectaVar == False and self.controladorDePausa == False:
@@ -282,6 +312,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                         self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
                     
                     self.controladorDePausa = True
+
+                    #Coloca el gif en pantalla
+                    self.cargaGift = QMovie(instanciaGiftsIncorrectos())
+                    self.lblimgReaccion.setMovie(self.cargaGift)
+                    self.cargaGift.start()
+
                     QApplication.processEvents()
                 
                 QApplication.processEvents()
@@ -300,26 +336,10 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         
         #cap.release() #Libera los recursos de cv2.VideoCapture()
         #cv2.destroyAllWindows()
-    
-            
-
                 #cv2.imshow("Frame", frame)
-                # if cv2.waitKey(1) & 0xFF == 27:
-                #     break
 
-        # while True:
-        #     if cv2.waitKey(1) & 0xFF == 27:
-        #             VentanaPrincipal.close(self)
-        #             VentanaPrincipal()
-        #             break
-    
-#     def pulsa(tecla):
-# 	    print('Se ha pulsado la tecla ' + str(tecla))
-
-# with kb.Listener(pulsa) as escuchador:
-#     escuchador.join()
-    
-if __name__ == "__main__": #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
+#Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     ventana = VentanaPrincipal()
     ventana.show()
