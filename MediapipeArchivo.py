@@ -76,9 +76,11 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         #Permite que no se repitan las preguntas
         self.preguntasRandomLista.remove(self.preguntasRandom)
 
-        #Detecta la tecla enter para dar paso a la siguiente pregunta
-        self.listener = keyboard.Listener(on_press=self.reiniciar_ventana)
-        self.listener.start()
+        #Detecta ciertas teclas para dar paso a eventos
+        self.listenerSigPregunta = keyboard.Listener(on_press=self.siguiente_pregunta)
+        self.listenerReinPregunta = keyboard.Listener(on_press=self.reiniciar_pregunta)
+        self.listenerSigPregunta.start()
+        self.listenerReinPregunta.start()
 
         #Asigna el numero a la pregunta
         self.numeroPregunta = 1
@@ -89,8 +91,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.funcion_Mediapipe()
 
 
-    def reiniciar_ventana(self, key):
-        if key == keyboard.Key.enter:
+
+
+
+    #Funcion que da paso a la siguiente pregunta, usando teclas "enter" o "espacio"
+    def siguiente_pregunta(self, key):
+        if key == keyboard.Key.enter or key == keyboard.Key.space:
             #Elige una pregunta al azar
             self.preguntasRandom = random.choice(self.preguntasRandomLista)
 
@@ -111,12 +117,30 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
             #Establece las imagenes en ventana
             self.lblimagen1.setPixmap(QPixmap(self.preguntasRandom()[0]).scaled(self.lblimagen1.size(), aspectRatioMode=True))
             self.lblimagen2.setPixmap(QPixmap(self.preguntasRandom()[1]).scaled(self.lblimagen2.size(), aspectRatioMode=True))
-
+            
+            #Si es True permite que los recuadros amarillos, rojo o verde se mantengan estaticos en pantalla y si es False, no los mantiene estaticos
             self.controladorDePausa = False
+
+            #Quita la pregunta de la lista para que no se vuelva a repetir
             self.preguntasRandomLista.remove(self.preguntasRandom)
             
-            print("Se ha presionado la tecla Enter")
+            #Actualiza el evento en ventana
             QApplication.processEvents()
+
+
+
+
+
+    #Permite reiniciar la pregunta cuando se presiona la tecla "R" del teclado
+    def reiniciar_pregunta(self, key):
+        if key == keyboard.KeyCode.from_char('r'):
+
+            #Quita el gif del label
+            self.lblimgReaccion.clear()
+
+            #Si es True permite que los recuadros amarillos, rojo o verde se mantengan estaticos en pantalla y si es False, no los mantiene estaticos
+            self.controladorDePausa = False
+
 
         
 
@@ -124,9 +148,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         mp_drawing = mp.solutions.drawing_utils
         mp_holistic = mp.solutions.holistic
 
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
-
-        controladorIfManoCerrada = 0 # <-----------variable pendiente de uso
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
         with mp_holistic.Holistic(
             static_image_mode=False,
@@ -143,7 +165,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 results = holistic.process(frame_rgb)
                 
 
-                # Mano izquieda (azul)
+                # Mano izquieda
                 mp_drawing.draw_landmarks(
                     frame, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                     mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=1),
@@ -187,7 +209,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     puntoYDedoStr2 = str(puntoYDedo2)
                 
 
-                # Mano derecha (verde)
+                # Mano derecha
                 mp_drawing.draw_landmarks(
                     frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
                     mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=1),
@@ -195,20 +217,22 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 
 
 
-                dedos = 0
+                dedosDerecha = 0
+                dedosIzquierda = 0
                 manoDerechaCerrada = False
                 manoIzquierdaCerrada = False
                 #Deteccion puntos manos
-                if results.left_hand_landmarks or results.right_hand_landmarks:
-                    if results.left_hand_landmarks:
-                        dedos += deteccion_puntos_manos(results.left_hand_landmarks.landmark)
-                        if dedos <= 1:
-                            manoIzquierdaCerrada = True
+                if results.right_hand_landmarks:
+                    dedosDerecha += deteccion_puntos_manos(results.right_hand_landmarks.landmark)
+                    if dedosDerecha <= 1:
+                        manoDerechaCerrada = True
 
-                    if results.right_hand_landmarks:
-                        dedos += deteccion_puntos_manos(results.right_hand_landmarks.landmark)
-                        if dedos <= 1:
-                            manoDerechaCerrada = True
+                if results.left_hand_landmarks:
+                    dedosIzquierda += deteccion_puntos_manos(results.left_hand_landmarks.landmark)
+                    if dedosIzquierda <= 1:
+                        manoIzquierdaCerrada = True
+
+                    
 
                 # Postura
                 mp_drawing.draw_landmarks(
@@ -239,7 +263,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 frame = cv2.flip(frame, 1)
 
                 #Texto en pantalla
-                cv2.putText(frame, "Numero de dedos: "+ str(dedos), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.putText(frame, "Numero de dedos: "+ str(dedosIzquierda), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 cv2.putText(frame, "Eje Y: "+ str(yD),(100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
 
@@ -253,7 +277,6 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
 
                 #Logica de las preguntas
-                #texto en pantalla de puntos Y
                 opcionCorrectaVar = None
                 if puntoYDerecha == True and self.controladorDePausa == False:
                     cv2.putText(frame, "Derecha Activado", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
@@ -261,12 +284,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     if manoDerechaCerrada == True:
                         self.lblimagen2.setStyleSheet("border: 30px solid #d59e09; border-radius: 50px;")
                         opcionCorrectaVar = self.preguntasRandom()[5]
-                    #instaciaPreguntas.preg_1()
-                    #self.lbl_cicloWhile.setText("Arriba")
-                    #self.close()
+
                     QApplication.processEvents()
                 elif self.controladorDePausa == False:
-                    #self.lbl_cicloWhile.setText("Abajo")
                     self.lblimagen2.setStyleSheet("border: none;")
                     QApplication.processEvents()
                     
@@ -276,32 +296,33 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     if manoIzquierdaCerrada == True:
                         self.lblimagen1.setStyleSheet("border: 30px solid #d59e09; border-radius: 50px;")
                         opcionCorrectaVar = self.preguntasRandom()[4]
-                    #instaciaPreguntas.preg_2()
                     QApplication.processEvents()
                     
                 elif self.controladorDePausa == False:
-                    #self.lbl_cicloWhile.setText("Abajo")
                     self.lblimagen1.setStyleSheet("border: none;")
                     QApplication.processEvents()
-                
 
 
+
+
+
+                #se activa se la respuesta es correcta
                 if opcionCorrectaVar == True and self.controladorDePausa == False:
                     if manoDerechaCerrada == True:
                         self.lblimagen2.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
                     
                     if manoIzquierdaCerrada == True:
                         self.lblimagen1.setStyleSheet("border: 30px solid #00bf63; border-radius: 50px;")
-                    
+
+                    self.controladorDePausa = True
+
                     #Coloca el gif en pantalla
                     self.cargaGift = QMovie(instanciaGiftsCorrectos())
                     self.lblimgReaccion.setMovie(self.cargaGift)
                     self.cargaGift.start()
-
-                    self.controladorDePausa = True
-
                     QApplication.processEvents()
 
+                #se activa se la respuesta es incorrecta
                 if opcionCorrectaVar == False and self.controladorDePausa == False:
                     if manoDerechaCerrada == True:
                         self.lblimagen2.setStyleSheet("border: 30px solid #ff3131; border-radius: 50px;")
@@ -317,7 +338,6 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     self.cargaGift = QMovie(instanciaGiftsIncorrectos())
                     self.lblimgReaccion.setMovie(self.cargaGift)
                     self.cargaGift.start()
-
                     QApplication.processEvents()
                 
                 QApplication.processEvents()
@@ -336,7 +356,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         
         #cap.release() #Libera los recursos de cv2.VideoCapture()
         #cv2.destroyAllWindows()
-                #cv2.imshow("Frame", frame)
+                cv2.imshow("Frame", frame)
 
 #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
 if __name__ == "__main__":
