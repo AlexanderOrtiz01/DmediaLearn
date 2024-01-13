@@ -2,7 +2,6 @@ import cv2
 import mediapipe as mp
 import math
 
-#import keyboard
 import sys
 from PyQt5.QtWidgets import QApplication, QDialog,QLabel, QMainWindow
 from PyQt5.uic import loadUi
@@ -13,6 +12,8 @@ import random
 from ventanas import preguntas
 from ventanas import gifs
 from pynput import keyboard
+
+import time
 
 
 
@@ -79,8 +80,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         #Detecta ciertas teclas para dar paso a eventos
         self.listenerSigPregunta = keyboard.Listener(on_press=self.siguiente_pregunta)
         self.listenerReinPregunta = keyboard.Listener(on_press=self.reiniciar_pregunta)
+        self.listenerMinijuego = keyboard.Listener(on_press=self.minijuego)
+        self.listenerIniciarJuego = keyboard.Listener(on_press=self.iniciar_juego)
         self.listenerSigPregunta.start()
         self.listenerReinPregunta.start()
+        self.listenerMinijuego.start()
+        self.listenerIniciarJuego.start()
 
         #Asigna el numero a la pregunta
         self.numeroPregunta = 1
@@ -88,6 +93,22 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.lblNumPregunta.setStyleSheet(open(estiloCss).read())
 
         self.controladorDePausa = False #<--- Hace que la opcion de eleccion de preguntas se detecta a pesar de continuar el bucle de la funcion de mediapipe
+        
+        #Variables de evento iniciar_juego
+        self.cuenta3Seg = ""
+        self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
+
+        self.rompeCiclo = False
+        
+        #Variables de funcion_minijuego
+        self.activadorEsquina = ""
+        self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
+        self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
+        self.congelaEsquina1ComparacionI = self.congelaEsquina2ComparacionI = self.congelaEsquina3ComparacionI = self.congelaEsquina4ComparacionI = False
+
+        self.variableComparar = ""
+        self.controladorIniciar_Detener = None
+
         self.funcion_Mediapipe()
 
 
@@ -142,13 +163,41 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
             self.controladorDePausa = False
 
 
+
+    def minijuego(self, key):
+        if key == keyboard.KeyCode.from_char('m'):
+            self.rompeCiclo = True
+
+
+
+    def iniciar_juego(self, key):
+        if key == keyboard.KeyCode.from_char('i'):
+            
+            #lista de las esquinas a activarse en orden aleatorio
+            random.shuffle(self.listaEsquinas)
+
+            # Cuenta regresiva del 3 al 1
+            i = int
+            for i in range(3, 0, -1):
+                self.cuenta3Seg = str(i)
+                time.sleep(1)
+            self.cuenta3Seg = ""
+            self.controladorIniciar_Detener = True
+
+            #manda las variables para que se pongan en pantalla los cuadros de las esquinas con 1 seg de timing
+            for j in self.listaEsquinas:
+                self.activadorEsquina = j
+                time.sleep(1)
+            self.activadorEsquina = ""
+            self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
+
         
 
     def funcion_Mediapipe(self):
         mp_drawing = mp.solutions.drawing_utils
         mp_holistic = mp.solutions.holistic
 
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
         with mp_holistic.Holistic(
             static_image_mode=False,
@@ -353,10 +402,209 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 cv2.putText(frame, f"Punto x: {puntoXDedoStr2}", (800, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                 cv2.putText(frame, f"Punto y: {puntoYDedoStr2}", (800, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 cv2.putText(frame, f"Punto Z: {puntoZDedoStr2}", (800, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-        
-        #cap.release() #Libera los recursos de cv2.VideoCapture()
-        #cv2.destroyAllWindows()
+                
+                if self.rompeCiclo == True:
+                    break
                 cv2.imshow("Frame", frame)
+        cap.release() #Libera los recursos de cv2.VideoCapture()
+        cv2.destroyAllWindows()
+        self.funcion_minijuego()
+                
+
+
+
+
+#-------------------------------------------------------------------------------------------------------------------------
+    def funcion_minijuego(self):
+        mp_drawing = mp.solutions.drawing_utils
+        mp_pose = mp.solutions.pose
+
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+        # Crea una ventana con un nombre específico
+        cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+
+        # Establece la propiedad de la ventana en pantalla completa
+        cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+        #Estilo de font para la cuenta regresiva
+        font = cv2.FONT_HERSHEY_DUPLEX
+        escala = 5
+        espesor = 9
+
+        #variable acumulativa para los indeces de la lista self.listaEsquinas
+        inidiceListaEsquinas = 0
+
+        with mp_pose.Pose(
+            static_image_mode=False,
+            model_complexity=0,
+            smooth_landmarks=True
+            ) as pose:
+
+            while True:
+                ret, frame = cap.read()
+                if ret == False:
+                    break
+                frame = cv2.flip(frame, 1)
+                height, width, _ = frame.shape
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                results = pose.process(frame_rgb)
+
+                if results.pose_landmarks is not None:
+                    # mp_drawing.draw_landmarks(
+                    #     frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                    #     mp_drawing.DrawingSpec(color=(128, 0, 250), thickness=2, circle_radius=3),
+                    #     mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2))
+                    
+
+                    #Deteccion de esquinas
+                    puntoMuñecaIzquierda = results.pose_landmarks.landmark[20]
+                    puntoMuñecaDerecha = results.pose_landmarks.landmark[19]
+
+                    xI = puntoMuñecaIzquierda.x
+                    xD = puntoMuñecaDerecha.x
+
+                    yI= puntoMuñecaIzquierda.y
+                    yD = puntoMuñecaDerecha.y
+
+                    #Si este if para a ser False no se continuaran detectando las esquinas
+                    if self.controladorIniciar_Detener == True:
+                        #Esquina 1
+                        if ((xI <= 0.2 and yI <= 0.2) or (xD <= 0.2 and yD <= 0.2)) and self.congelaEsquina1Comparacion == None:
+                            self.variableComparar = "esq1"
+                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
+                                inidiceListaEsquinas += 1
+                                self.congelaEsquina1Comparacion = True
+
+                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                                self.congelaEsquina1Comparacion = False
+                    
+
+                        #Esquina 2
+                        if ((xI >= 0.8 and yI <= 0.2) or (xD >= 0.8 and yD <= 0.2)) and self.congelaEsquina2Comparacion == None:
+                            self.variableComparar = "esq2"
+                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
+                                inidiceListaEsquinas += 1
+                                self.congelaEsquina2Comparacion = True
+
+                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                                self.congelaEsquina2Comparacion = False
+                        
+
+                        #Esquina 3
+                        if ((xI <= 0.2 and yI >= 0.8) or (xD <= 0.2 and yD >= 0.8)) and self.congelaEsquina3Comparacion == None:
+                            self.variableComparar = "esq3"
+                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
+                                inidiceListaEsquinas += 1
+                                self.congelaEsquina3Comparacion = True
+
+                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                                self.congelaEsquina3Comparacion = False
+                        
+
+                        #Esquina 4
+                        if ((xI >= 0.8 and yI >= 0.8) or (xD >= 0.8 and yD >= 0.8)) and self.congelaEsquina4Comparacion == None:
+                            self.variableComparar = "esq4"
+                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
+                                inidiceListaEsquinas += 1
+                                self.congelaEsquina4Comparacion = True
+
+                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                                self.congelaEsquina4Comparacion = False
+                    
+
+
+
+
+                #Pertenece a la esquina 1 (Coloca los cuadros verde y rojo respectivamente)
+                if self.congelaEsquina1Comparacion == True:
+                    cv2.rectangle(frame, (0, 0), (100, 100), (99, 191, 0), -1)
+                    
+
+                elif self.congelaEsquina1Comparacion == False:
+                    cv2.rectangle(frame, (0, 0), (100, 100), (49, 49, 255), -1)
+                    self.controladorIniciar_Detener = False
+
+
+                #Pertenece a la esquina 2 (Coloca los cuadros verde y rojo respectivamente)
+                if self.congelaEsquina2Comparacion == True:
+                    cv2.rectangle(frame, (width-100, 0), (width, 100), (99, 191, 0), -1)
+                    
+
+                elif self.congelaEsquina2Comparacion == False:
+                    cv2.rectangle(frame, (width-100, 0), (width, 100), (49, 49, 255), -1)
+                    self.controladorIniciar_Detener = False                
+
+                #Pertenece a la esquina 3 (Coloca los cuadros verde y rojo respectivamente)
+                if self.congelaEsquina3Comparacion == True:
+                    cv2.rectangle(frame, (0, height-100), (100, height), (99, 191, 0), -1)
+                    
+
+                elif self.congelaEsquina3Comparacion == False:
+                    cv2.rectangle(frame, (0, height-100), (100, height), (49, 49, 255), -1)
+                    self.controladorIniciar_Detener = False
+                
+
+                #Pertenece a la esquina 4 (Coloca los cuadros verde y rojo respectivamente)
+                if self.congelaEsquina4Comparacion == True:
+                    cv2.rectangle(frame, (width-100, height-100), (width, height), (99, 191, 0), -1)
+                    
+
+                elif self.congelaEsquina4Comparacion == False:
+                    cv2.rectangle(frame, (width-100, height-100), (width, height), (49, 49, 255), -1)
+                    self.controladorIniciar_Detener = False
+                    
+                
+
+
+
+
+
+
+                #Pone la cuenta regresiva en el centro de la pantalla
+                texto = f"{self.cuenta3Seg}"
+
+                # Obtener el tamaño del texto
+                tamano_texto, _ = cv2.getTextSize(texto, font, escala, espesor)
+
+                # Obtener las dimensiones de la imagen/frame
+                alto_frame, ancho_frame, _ = frame.shape
+
+                # Calcular las coordenadas del texto para que esté centrado
+                x = int((ancho_frame - tamano_texto[0]) / 2)
+                y = int((alto_frame + tamano_texto[1]) / 2)
+
+                # Dibujar el texto centrado en el frame
+                cv2.putText(frame, texto, (x, y), font, escala, (255, 0, 0), espesor)
+
+
+
+
+
+                #Muestra en pantalla las esquinas a memorizar
+                if self.activadorEsquina == "esq1" or self.congelaEsquina1 == True:
+                    cv2.rectangle(frame, (0, 0), (100, 100), (255, 158, 72), -1)  # Esquina superior izquierda
+                    self.congelaEsquina1 = True
+                
+                if self.activadorEsquina == "esq2" or self.congelaEsquina2 == True:
+                    cv2.rectangle(frame, (width-100, 0), (width, 100), (255, 158, 72), -1)  # Esquina superior derecha
+                    self.congelaEsquina2 = True
+
+                if self.activadorEsquina == "esq3" or self.congelaEsquina3 == True:
+                    cv2.rectangle(frame, (0, height-100), (100, height), (255, 158, 72), -1)  # Esquina inferior izquierda
+                    self.congelaEsquina3 = True
+
+                if self.activadorEsquina == "esq4" or self.congelaEsquina4 == True:
+                    cv2.rectangle(frame, (width-100, height-100), (width, height), (255, 158, 72), -1)  # Esquina inferior derecha
+                    self.congelaEsquina4 = True
+                
+                cv2.imshow("Frame", frame)
+                if cv2.waitKey(1) & 0xFF == 27:
+                    break
+        cap.release()
+        cv2.destroyAllWindows()
+#-------------------------------------------------------------------------------------------------------------------------
+
 
 #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
 if __name__ == "__main__":
