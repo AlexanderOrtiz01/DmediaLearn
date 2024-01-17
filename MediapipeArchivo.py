@@ -419,7 +419,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         mp_drawing = mp.solutions.drawing_utils
         mp_pose = mp.solutions.pose
 
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1    , cv2.CAP_DSHOW)
 
         # Crea una ventana con un nombre específico
         cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
