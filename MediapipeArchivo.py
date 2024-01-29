@@ -15,7 +15,8 @@ from pynput import keyboard
 
 import time
 
-
+from PIL import Image
+import numpy as np
 
     #--------------------Funciones------------------------------------------
     #Calcula los puntos de los dedos
@@ -82,10 +83,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.listenerReinPregunta = keyboard.Listener(on_press=self.reiniciar_pregunta)
         self.listenerMinijuego = keyboard.Listener(on_press=self.minijuego)
         self.listenerIniciarJuego = keyboard.Listener(on_press=self.iniciar_juego)
+        self.listenerfinalizarMinijuego = keyboard.Listener(on_press=self.finalizar_Minijuego)
         self.listenerSigPregunta.start()
         self.listenerReinPregunta.start()
         self.listenerMinijuego.start()
         self.listenerIniciarJuego.start()
+        self.listenerfinalizarMinijuego.start()
 
         #Asigna el numero a la pregunta
         self.numeroPregunta = 1
@@ -96,9 +99,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         
         #Variables de evento iniciar_juego
         self.cuenta3Seg = ""
-        self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
+        self.listaEsquinas = []
 
-        self.rompeCiclo = False
+        self.rompeCiclo = None
         
         #Variables de funcion_minijuego
         self.activadorEsquina = ""
@@ -172,7 +175,15 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
     def iniciar_juego(self, key):
         if key == keyboard.KeyCode.from_char('i'):
+            #variable acumulativa para los indeces de la lista self.listaEsquinas
+            self.inidiceListaEsquinas = 0
+
+            #Lista con todas las esquinas de la pantalla
+            self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
             
+            #Cuando se presiona la tecla los cuadros de las esquinas desaparecen
+            self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
+
             #lista de las esquinas a activarse en orden aleatorio
             random.shuffle(self.listaEsquinas)
 
@@ -190,6 +201,14 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 time.sleep(1)
             self.activadorEsquina = ""
             self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
+
+
+    def finalizar_Minijuego(self, key):
+        if key == keyboard.KeyCode.from_char('f'):
+            self.rompeCiclo = False
+
+            #Cuando se presiona la tecla los cuadros de las esquinas desaparecen
+            self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
 
         
 
@@ -427,13 +446,11 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         # Establece la propiedad de la ventana en pantalla completa
         cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-        #Estilo de font para la cuenta regresiva
+        #Estilo de font para la cuenta regresiva7
         font = cv2.FONT_HERSHEY_DUPLEX
         escala = 5
         espesor = 9
 
-        #variable acumulativa para los indeces de la lista self.listaEsquinas
-        inidiceListaEsquinas = 0
 
         with mp_pose.Pose(
             static_image_mode=False,
@@ -472,44 +489,44 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                         #Esquina 1
                         if ((xI <= 0.2 and yI <= 0.2) or (xD <= 0.2 and yD <= 0.2)) and self.congelaEsquina1Comparacion == None:
                             self.variableComparar = "esq1"
-                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
-                                inidiceListaEsquinas += 1
+                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
+                                self.inidiceListaEsquinas += 1
                                 self.congelaEsquina1Comparacion = True
 
-                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
                                 self.congelaEsquina1Comparacion = False
                     
 
                         #Esquina 2
                         if ((xI >= 0.8 and yI <= 0.2) or (xD >= 0.8 and yD <= 0.2)) and self.congelaEsquina2Comparacion == None:
                             self.variableComparar = "esq2"
-                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
-                                inidiceListaEsquinas += 1
-                                self.congelaEsquina2Comparacion = True
+                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
+                                self.inidiceListaEsquinas += 1
+                                self.congelaEsquina2Comparacion = True  
 
-                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
                                 self.congelaEsquina2Comparacion = False
                         
 
                         #Esquina 3
                         if ((xI <= 0.2 and yI >= 0.8) or (xD <= 0.2 and yD >= 0.8)) and self.congelaEsquina3Comparacion == None:
                             self.variableComparar = "esq3"
-                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
-                                inidiceListaEsquinas += 1
+                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
+                                self.inidiceListaEsquinas += 1
                                 self.congelaEsquina3Comparacion = True
 
-                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
                                 self.congelaEsquina3Comparacion = False
                         
 
                         #Esquina 4
                         if ((xI >= 0.8 and yI >= 0.8) or (xD >= 0.8 and yD >= 0.8)) and self.congelaEsquina4Comparacion == None:
                             self.variableComparar = "esq4"
-                            if self.listaEsquinas[inidiceListaEsquinas] == self.variableComparar:
-                                inidiceListaEsquinas += 1
+                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
+                                self.inidiceListaEsquinas += 1
                                 self.congelaEsquina4Comparacion = True
 
-                            elif self.listaEsquinas[inidiceListaEsquinas] != self.variableComparar:
+                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
                                 self.congelaEsquina4Comparacion = False
                     
 
@@ -575,7 +592,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 y = int((alto_frame + tamano_texto[1]) / 2)
 
                 # Dibujar el texto centrado en el frame
-                cv2.putText(frame, texto, (x, y), font, escala, (255, 0, 0), espesor)
+                cv2.putText(frame, texto, (x, y), font, escala, (255, 255, 255), espesor)
 
 
 
@@ -601,8 +618,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 cv2.imshow("Frame", frame)
                 if cv2.waitKey(1) & 0xFF == 27:
                     break
-        cap.release()
+                if self.rompeCiclo == False:
+                    break
+                
+        cap.release() #Libera los recursos de cv2.VideoCapture()
         cv2.destroyAllWindows()
+        self.funcion_Mediapipe()
 #-------------------------------------------------------------------------------------------------------------------------
 
 
