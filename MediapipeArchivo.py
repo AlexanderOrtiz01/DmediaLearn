@@ -42,7 +42,7 @@ def calcularDistanciaDedos(dedo, muñeca):
     x1, y1, z1 = dedo.x, dedo.y, dedo.z
     x2, y2, z2 = muñeca.x, muñeca.y, muñeca.z
 
-    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 2)))  # <----------(abs(z1 * 2))) Distacia 
+    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 50)))  # <----------(abs(z1 * 2))) Distacia  50 = 4 metros aproximadamente
     return distancia
     #-------------------------------------------------------------------------------
 
@@ -216,7 +216,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         mp_drawing = mp.solutions.drawing_utils
         mp_holistic = mp.solutions.holistic
 
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
         with mp_holistic.Holistic(
             static_image_mode=False,
@@ -438,7 +438,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         mp_drawing = mp.solutions.drawing_utils
         mp_pose = mp.solutions.pose
 
-        cap = cv2.VideoCapture(1    , cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
         # Crea una ventana con un nombre específico
         cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -468,10 +468,10 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 results = pose.process(frame_rgb)
 
                 if results.pose_landmarks is not None:
-                    # mp_drawing.draw_landmarks(
-                    #     frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                    #     mp_drawing.DrawingSpec(color=(128, 0, 250), thickness=2, circle_radius=3),
-                    #     mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2))
+                    mp_drawing.draw_landmarks(
+                        frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
+                        mp_drawing.DrawingSpec(color=(128, 0, 250), thickness=2, circle_radius=3),
+                        mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2))
                     
 
                     #Deteccion de esquinas
@@ -484,10 +484,10 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     yI= puntoMuñecaIzquierda.y
                     yD = puntoMuñecaDerecha.y
 
-                    #Si este if para a ser False no se continuaran detectando las esquinas
+                    #Si este if pasa a ser False no se continuaran detectando las esquinas
                     if self.controladorIniciar_Detener == True:
                         #Esquina 1
-                        if ((xI <= 0.2 and yI <= 0.2) or (xD <= 0.2 and yD <= 0.2)) and self.congelaEsquina1Comparacion == None:
+                        if ((xI <= 0.3 and yI <= 0.3) or (xD <= 0.3 and yD <= 0.3)) and self.congelaEsquina1Comparacion == None:
                             self.variableComparar = "esq1"
                             if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
                                 self.inidiceListaEsquinas += 1
@@ -498,7 +498,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     
 
                         #Esquina 2
-                        if ((xI >= 0.8 and yI <= 0.2) or (xD >= 0.8 and yD <= 0.2)) and self.congelaEsquina2Comparacion == None:
+                        if ((xI >= 0.7 and yI <= 0.3) or (xD >= 0.7 and yD <= 0.3)) and self.congelaEsquina2Comparacion == None:
                             self.variableComparar = "esq2"
                             if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
                                 self.inidiceListaEsquinas += 1
@@ -509,7 +509,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                         
 
                         #Esquina 3
-                        if ((xI <= 0.2 and yI >= 0.8) or (xD <= 0.2 and yD >= 0.8)) and self.congelaEsquina3Comparacion == None:
+                        if ((xI <= 0.3 and yI >= 0.7) or (xD <= 0.3 and yD >= 0.7)) and self.congelaEsquina3Comparacion == None:
                             self.variableComparar = "esq3"
                             if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
                                 self.inidiceListaEsquinas += 1
@@ -520,7 +520,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                         
 
                         #Esquina 4
-                        if ((xI >= 0.8 and yI >= 0.8) or (xD >= 0.8 and yD >= 0.8)) and self.congelaEsquina4Comparacion == None:
+                        if ((xI >= 0.7 and yI >= 0.7) or (xD >= 0.7 and yD >= 0.7)) and self.congelaEsquina4Comparacion == None:
                             self.variableComparar = "esq4"
                             if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
                                 self.inidiceListaEsquinas += 1
@@ -530,45 +530,47 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                                 self.congelaEsquina4Comparacion = False
                     
 
+                    cv2.putText(frame, f"Punto x: {str(xD)}", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.putText(frame, f"Punto y: {str(yD)}", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
 
 
                 #Pertenece a la esquina 1 (Coloca los cuadros verde y rojo respectivamente)
                 if self.congelaEsquina1Comparacion == True:
-                    cv2.rectangle(frame, (0, 0), (100, 100), (99, 191, 0), -1)
+                    cv2.rectangle(frame, (0, 0), (200, 200), (99, 191, 0), -1)
                     
 
                 elif self.congelaEsquina1Comparacion == False:
-                    cv2.rectangle(frame, (0, 0), (100, 100), (49, 49, 255), -1)
+                    cv2.rectangle(frame, (0, 0), (200, 200), (49, 49, 255), -1)
                     self.controladorIniciar_Detener = False
 
 
                 #Pertenece a la esquina 2 (Coloca los cuadros verde y rojo respectivamente)
                 if self.congelaEsquina2Comparacion == True:
-                    cv2.rectangle(frame, (width-100, 0), (width, 100), (99, 191, 0), -1)
+                    cv2.rectangle(frame, (width-200, 0), (width, 200), (99, 191, 0), -1)
                     
 
                 elif self.congelaEsquina2Comparacion == False:
-                    cv2.rectangle(frame, (width-100, 0), (width, 100), (49, 49, 255), -1)
+                    cv2.rectangle(frame, (width-200, 0), (width, 200), (49, 49, 255), -1)
                     self.controladorIniciar_Detener = False                
 
                 #Pertenece a la esquina 3 (Coloca los cuadros verde y rojo respectivamente)
                 if self.congelaEsquina3Comparacion == True:
-                    cv2.rectangle(frame, (0, height-100), (100, height), (99, 191, 0), -1)
+                    cv2.rectangle(frame, (0, height-200), (200, height), (99, 191, 0), -1)
                     
 
                 elif self.congelaEsquina3Comparacion == False:
-                    cv2.rectangle(frame, (0, height-100), (100, height), (49, 49, 255), -1)
+                    cv2.rectangle(frame, (0, height-200), (200, height), (49, 49, 255), -1)
                     self.controladorIniciar_Detener = False
                 
 
                 #Pertenece a la esquina 4 (Coloca los cuadros verde y rojo respectivamente)
                 if self.congelaEsquina4Comparacion == True:
-                    cv2.rectangle(frame, (width-100, height-100), (width, height), (99, 191, 0), -1)
+                    cv2.rectangle(frame, (width-200, height-200), (width, height), (99, 191, 0), -1)
                     
 
                 elif self.congelaEsquina4Comparacion == False:
-                    cv2.rectangle(frame, (width-100, height-100), (width, height), (49, 49, 255), -1)
+                    cv2.rectangle(frame, (width-200, height-200), (width, height), (49, 49, 255), -1)
                     self.controladorIniciar_Detener = False
                     
                 
@@ -600,20 +602,22 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
                 #Muestra en pantalla las esquinas a memorizar
                 if self.activadorEsquina == "esq1" or self.congelaEsquina1 == True:
-                    cv2.rectangle(frame, (0, 0), (100, 100), (255, 158, 72), -1)  # Esquina superior izquierda
+                    cv2.rectangle(frame, (0, 0), (200, 200), (255, 158, 72), -1)  # Esquina superior izquierda
                     self.congelaEsquina1 = True
                 
                 if self.activadorEsquina == "esq2" or self.congelaEsquina2 == True:
-                    cv2.rectangle(frame, (width-100, 0), (width, 100), (255, 158, 72), -1)  # Esquina superior derecha
+                    cv2.rectangle(frame, (width-200, 0), (width, 200), (255, 158, 72), -1)  # Esquina superior derecha
                     self.congelaEsquina2 = True
 
                 if self.activadorEsquina == "esq3" or self.congelaEsquina3 == True:
-                    cv2.rectangle(frame, (0, height-100), (100, height), (255, 158, 72), -1)  # Esquina inferior izquierda
+                    cv2.rectangle(frame, (0, height-200), (200, height), (255, 158, 72), -1)  # Esquina inferior izquierda
                     self.congelaEsquina3 = True
 
                 if self.activadorEsquina == "esq4" or self.congelaEsquina4 == True:
-                    cv2.rectangle(frame, (width-100, height-100), (width, height), (255, 158, 72), -1)  # Esquina inferior derecha
+                    cv2.rectangle(frame, (width-200, height-200), (width, height), (255, 158, 72), -1)  # Esquina inferior derecha
                     self.congelaEsquina4 = True
+
+
                 
                 cv2.imshow("Frame", frame)
                 if cv2.waitKey(1) & 0xFF == 27:
