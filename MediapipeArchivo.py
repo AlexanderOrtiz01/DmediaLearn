@@ -42,7 +42,7 @@ def calcularDistanciaDedos(dedo, muñeca):
     x1, y1, z1 = dedo.x, dedo.y, dedo.z
     x2, y2, z2 = muñeca.x, muñeca.y, muñeca.z
 
-    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 50)))  # <----------(abs(z1 * 2))) Distacia  50 = 4 metros aproximadamente
+    distancia = math.sqrt(((x2-x1)**2 + (y2-y1)**2) + (abs(z1 * 5)))  # <----------(abs(z1 * 2))) Distacia  50 = 4 metros aproximadamente
     return distancia
     #-------------------------------------------------------------------------------
 
@@ -216,7 +216,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         mp_drawing = mp.solutions.drawing_utils
         mp_holistic = mp.solutions.holistic
 
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
         with mp_holistic.Holistic(
             static_image_mode=False,
