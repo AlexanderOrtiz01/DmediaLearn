@@ -18,67 +18,7 @@ import time
 from PIL import Image
 import numpy as np
 
-
-#Todo esto pertenece a MediaPiepe Gestures
-#Descarga del modelo y guardado en directorio local
-model_path = 'Modelo\gesture_recognizer.task'
-
-#Construimos las tareas
-BaseOptions = mp.tasks.BaseOptions
-GestureRecognizer = mp.tasks.vision.GestureRecognizer
-GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
-GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-#Especificamos la ruta del modelo dentro del parámetro Nombre del modelo
-base_options = BaseOptions(model_asset_path=model_path)
-
     #--------------------Funciones------------------------------------------
-#Variables controladoras de mediapipe gestures
-gestos = None
-puntoYDerecha = False
-puntoYIzquierda = False
-manoDerechaCerrada = False
-manoIzquierdaCerrada = False
-#Detecta el gesto y la lateralidad de las manos...
-def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
-  #print(type(result.gestures))
-  global gestos, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada
-  if (len(result.gestures) != 0):
-    gestos = str(result.gestures[0][0].category_name)
-    puntoY = result.hand_landmarks[0][0]
-    puntoY = puntoY.y
-    puntoX = result.hand_landmarks[0][0]
-    puntoX = puntoX.x
-
-
-    #Estas variables se colocan en False para que la seleccion de la opcion se deseleccione al bajar la mano
-    puntoYIzquierda = False
-    puntoYDerecha = False
-    #Punto Y derecha
-    if puntoY <= 0.4 and puntoX <= 0.5:
-        puntoYDerecha = True
-    #Punto Y izquierda
-    if puntoY <= 0.4 and puntoX >= 0.5:
-        puntoYIzquierda = True
-
-
-    #Estas variables se colocan en False para que no se guarde la mano cerrada
-    manoDerechaCerrada = False
-    manoIzquierdaCerrada = False
-    #Detecta mano cerrada derecha
-    if str(gestos) == "Closed_Fist" and puntoYDerecha == True:
-        manoDerechaCerrada =True
-    #Detecta mano cerrada izquierda
-    if str(gestos) == "Closed_Fist" and puntoYIzquierda == True:
-        manoIzquierdaCerrada =True
-    print(gestos)
-  else:
-    gestos = None
-    print("Vacio")
-
-
-
     #Calcula los puntos de los dedos
 def deteccion_puntos_manos(manoLandmark):
     puntos = [8, 12, 16, 20]
@@ -172,7 +112,6 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         self.variableComparar = ""
         self.controladorIniciar_Detener = None
 
-        #Inicia la funcion principal (Ventana principal)
         self.funcion_Mediapipe()
 
 
@@ -274,39 +213,132 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
         
 
     def funcion_Mediapipe(self):
-        global gestos, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada
+        mp_drawing = mp.solutions.drawing_utils
+        mp_holistic = mp.solutions.holistic
+
         cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
 
-        #Inicializador del detector de gestos
-        options = GestureRecognizerOptions(
-            base_options,
-            running_mode=VisionRunningMode.LIVE_STREAM,
-            num_hands=1,
-            result_callback=print_result)
-        with GestureRecognizer.create_from_options(options) as recognizer:
-            
-            frame_timestamp_ms = 0
+        with mp_holistic.Holistic(
+            static_image_mode=False,
+            model_complexity=0,
+            smooth_landmarks=True) as holistic:
+
             while True:
                 ret, frame = cap.read()
                 if ret == False:
                     break
-                height, width, _ = frame.shape
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 
 
-                mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+                results = holistic.process(frame_rgb)
+                
 
-                #Reconocedor de gestos para el live stream
-                recognizer.recognize_async(mp_image, frame_timestamp_ms)
-                frame_timestamp_ms += 1
+                # Mano izquieda
+                mp_drawing.draw_landmarks(
+                    frame, results.left_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=1),
+                    mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2))
+                #-------------------------- Primer punto------------------------
+                puntoZDedoStr = str
+                if results.right_hand_landmarks is not None:
+                    puntoZDedo= results.right_hand_landmarks.landmark[8] #________________________________________ Punto z indice
+                    puntoZDedo = puntoZDedo.z
+                    puntoZDedoStr = str(puntoZDedo)
+
+                puntoXDedoStr = str
+                if results.right_hand_landmarks is not None:
+                    puntoXDedo= results.right_hand_landmarks.landmark[8] #________________________________________ Punto x indice
+                    puntoXDedo = puntoXDedo.x
+                    puntoXDedoStr = str(puntoXDedo)
+
+                puntoYDedoStr = str
+                if results.right_hand_landmarks is not None:
+                    puntoYDedo= results.right_hand_landmarks.landmark[8] #________________________________________ Punto y indice
+                    puntoYDedo = puntoYDedo.y
+                    puntoYDedoStr = str(puntoYDedo)
+
+                    #-------------------------- Segundo punto------------------------
+                puntoZDedoStr2 = str
+                if results.right_hand_landmarks is not None:
+                    puntoZDedo2= results.right_hand_landmarks.landmark[0] #________________________________________ Punto z indice
+                    puntoZDedo2 = puntoZDedo2.z
+                    puntoZDedoStr2 = str(puntoZDedo2)
+
+                puntoXDedoStr2 = str
+                if results.right_hand_landmarks is not None:
+                    puntoXDedo2= results.right_hand_landmarks.landmark[0] #________________________________________ Punto x indice
+                    puntoXDedo2 = puntoXDedo2.x
+                    puntoXDedoStr2 = str(puntoXDedo2)
+
+                puntoYDedoStr2 = str
+                if results.right_hand_landmarks is not None:
+                    puntoYDedo2= results.right_hand_landmarks.landmark[0] #________________________________________ Punto y indice
+                    puntoYDedo2 = puntoYDedo2.y
+                    puntoYDedoStr2 = str(puntoYDedo2)
+                
+
+                # Mano derecha
+                mp_drawing.draw_landmarks(
+                    frame, results.right_hand_landmarks, mp_holistic.HAND_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(255, 255, 0), thickness=2, circle_radius=1),
+                    mp_drawing.DrawingSpec(color=(255, 0, 0), thickness=2))
+                
+
+
+                dedosDerecha = 0
+                dedosIzquierda = 0
+                manoDerechaCerrada = False
+                manoIzquierdaCerrada = False
+                #Deteccion puntos manos
+                if results.right_hand_landmarks:
+                    dedosDerecha += deteccion_puntos_manos(results.right_hand_landmarks.landmark)
+                    if dedosDerecha <= 1:
+                        manoDerechaCerrada = True
+
+                if results.left_hand_landmarks:
+                    dedosIzquierda += deteccion_puntos_manos(results.left_hand_landmarks.landmark)
+                    if dedosIzquierda <= 1:
+                        manoIzquierdaCerrada = True
+
+                    
+
+                # Postura
+                mp_drawing.draw_landmarks(
+                    frame, results.pose_landmarks, mp_holistic.POSE_CONNECTIONS,
+                    mp_drawing.DrawingSpec(color=(128, 0, 255), thickness=2, circle_radius=1),
+                    mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2))
+                
+                xI, yI = 0.0, 0.0
+                xD, yD = 0.0, 0.0
+                puntoYIzquierda = False
+                puntoYDerecha = False
+                #Deteccion de puntos postura
+                if results.pose_landmarks is not None:
+                    puntoMuñecaIzquierda = results.pose_landmarks.landmark[15]
+                    puntoMuñecaDerecha = results.pose_landmarks.landmark[16]
+                    
+                    yI= puntoMuñecaIzquierda.y
+                    yD = puntoMuñecaDerecha.y
+                    if yI <= 0.4:
+                        puntoYIzquierda = True
+
+                    if yD <= 0.4:
+                        puntoYDerecha = True
+
+
                 
                 #Invierte la imagen
                 frame = cv2.flip(frame, 1)
+
+                #Texto en pantalla
+                cv2.putText(frame, "Numero de dedos: "+ str(dedosIzquierda), (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.putText(frame, "Eje Y: "+ str(yD),(100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
+
                 #Texto en pantalla de manos cerradas
-                if str(gestos) == "Closed_Fist":
+                if manoIzquierdaCerrada == True:
                     cv2.putText(frame, "Mano izquierda cerrada", (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                if str(gestos) == "Closed_Fist":
+                if manoDerechaCerrada == True:
                     cv2.putText(frame, "Mano derecha cerrada", (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
 
@@ -378,6 +410,17 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 
                 QApplication.processEvents()
 
+
+
+                #texto de puntos x, y, z en pantalla punto [8]
+                cv2.putText(frame, f"Punto x: {puntoXDedoStr}", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(frame, f"Punto y: {puntoYDedoStr}", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                cv2.putText(frame, f"Punto Z: {puntoZDedoStr}", (100, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+                #texto de puntos x, y, z en pantalla punto [0]
+                cv2.putText(frame, f"Punto x: {puntoXDedoStr2}", (800, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                cv2.putText(frame, f"Punto y: {puntoYDedoStr2}", (800, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.putText(frame, f"Punto Z: {puntoZDedoStr2}", (800, 400), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
                 
                 if self.rompeCiclo == True:
                     break
