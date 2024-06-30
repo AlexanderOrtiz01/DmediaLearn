@@ -18,12 +18,28 @@ VisionRunningMode = mp.tasks.vision.RunningMode
 #Especificamos la ruta del modelo dentro del parámetro Nombre del modelo
 base_options = BaseOptions(model_asset_path=model_path)
 
-cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+
+
+
+# Crea una ventana con un nombre específico
+cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+# Establece la propiedad de la ventana en pantalla completa
+cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+
+
+
+
+
 # Create a gesture recognizer instance with the live stream mode:
 gestos = None
 lateralidad = None
 yI = None
 xI = None
+
+
 def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
 
   #print(type(result.gestures))
@@ -48,6 +64,11 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
 
 
 
+imagen_superpuesta = cv2.imread('Imagenes\GestosEmojisMinijuego\Mano_Levantada_Layout.png')
+
+
+
+
 
 options = GestureRecognizerOptions(
     base_options,
@@ -62,11 +83,21 @@ with GestureRecognizer.create_from_options(options) as recognizer:
     ret, frame = cap.read()
     if ret == False:
       break
+
+
+
+    # Asegurarse de que la imagen superpuesta tenga el mismo tamaño que el frame
+    imagen_superpuesta = cv2.resize(imagen_superpuesta, (frame.shape[1], frame.shape[0]))
     
+
+
+
+
     height, width, _ = frame.shape
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    
+  
+
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
 
     #Reconocedor de gestos para el live stream
@@ -75,6 +106,21 @@ with GestureRecognizer.create_from_options(options) as recognizer:
     
     frame = cv2.flip(frame, 1)
     cv2.putText(frame, str(xI),(100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+
+
+
+
+
+     # Combinar el frame y la imagen superpuesta
+    alpha = 0.0  # Peso de la imagen superpuesta
+    beta = 1 - alpha  # Peso del frame original
+    frame = cv2.addWeighted(frame, alpha, imagen_superpuesta, beta, 0)
+
+
+
+
+
+    
 
     #cv2.putText(frame, str(gestos),(100, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 

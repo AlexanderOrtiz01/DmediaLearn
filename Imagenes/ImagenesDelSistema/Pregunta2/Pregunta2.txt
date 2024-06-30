@@ -1,0 +1,11 @@
+# Preguntas
+def preg_1():
+    tituloPregunta = "¿Cuántas salidas o resultados tiene si-entonces?"
+    tamañoFuente = "72px"
+    imagen1 = "Imagenes\ImagenesDelSistema\Pregunta2/2.jpg"
+    imagen2 = "Imagenes\ImagenesDelSistema\Pregunta2/3.jpg"
+    respuestaImagen1 = True
+    respuestaImagen2 = False
+    return imagen1, imagen2, tituloPregunta, tamañoFuente, respuestaImagen1, respuestaImagen2
+
+    

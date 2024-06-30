@@ -40,6 +40,12 @@ puntoYDerecha = False
 puntoYIzquierda = False
 manoDerechaCerrada = False
 manoIzquierdaCerrada = False
+
+#Variables del minijuego
+imagenSuperpuestaPath = "Imagenes\GestosEmojisMinijuego\Fondo.png"
+            
+
+
 #Detecta el gesto y la lateralidad de las manos...
 def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
   #print(type(result.gestures))
@@ -73,9 +79,22 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
     if str(gestos) == "Closed_Fist" and puntoYIzquierda == True:
         manoIzquierdaCerrada =True
     print(gestos)
+
+
+
+    #------------------Minijuego------------------------
+    if str(gestos) == "Closed_Fist" and puntoYDerecha == True:
+        manoDerechaCerrada =True
+
+
+
+
+
+
   else:
     gestos = None
     print("Vacio")
+
 
 
 
@@ -235,33 +254,50 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
 
     def iniciar_juego(self, key):
+        global imagenSuperpuestaPath
         if key == keyboard.KeyCode.from_char('i'):
-            #variable acumulativa para los indeces de la lista self.listaEsquinas
-            self.inidiceListaEsquinas = 0
 
-            #Lista con todas las esquinas de la pantalla
-            self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
+            #Lista de gestos de las manos
+            listaGestos = {"Thumb_Up":"Imagenes\GestosEmojisMinijuego\Pulgar_Hacia_Arriba_Layout.png", 
+                            "Thumb_Down":"Imagenes\GestosEmojisMinijuego\PulgarHaciaAbajo.png",
+                            "Open_Palm":"Imagenes\GestosEmojisMinijuego\Mano_Levantada_Layout.png",
+                            "Closed_Fist":"Imagenes\GestosEmojisMinijuego\ManoCerrada.png"}
             
-            #Cuando se presiona la tecla los cuadros de las esquinas desaparecen
-            self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
+            imagenSuperpuestaPath = random.choice(list(listaGestos.values()))
+            
 
-            #lista de las esquinas a activarse en orden aleatorio
-            random.shuffle(self.listaEsquinas)
+            
 
-            # Cuenta regresiva del 3 al 1
-            i = int
-            for i in range(3, 0, -1):
-                self.cuenta3Seg = str(i)
-                time.sleep(1)
-            self.cuenta3Seg = ""
-            self.controladorIniciar_Detener = True
 
-            #manda las variables para que se pongan en pantalla los cuadros de las esquinas con 1 seg de timing
-            for j in self.listaEsquinas:
-                self.activadorEsquina = j
-                time.sleep(1)
-            self.activadorEsquina = ""
-            self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
+
+
+
+            # #variable acumulativa para los indeces de la lista self.listaEsquinas
+            # self.inidiceListaEsquinas = 0
+
+            # #Lista con todas las esquinas de la pantalla
+            # self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
+            
+            # #Cuando se presiona la tecla los cuadros de las esquinas desaparecen
+            # self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
+
+            # #lista de las esquinas a activarse en orden aleatorio
+            # random.shuffle(self.listaEsquinas)
+
+            # # Cuenta regresiva del 3 al 1
+            # i = int
+            # for i in range(3, 0, -1):
+            #     self.cuenta3Seg = str(i)
+            #     time.sleep(1)
+            # self.cuenta3Seg = ""
+            # self.controladorIniciar_Detener = True
+
+            # #manda las variables para que se pongan en pantalla los cuadros de las esquinas con 1 seg de timing
+            # for j in self.listaEsquinas:
+            #     self.activadorEsquina = j
+            #     time.sleep(1)
+            # self.activadorEsquina = ""
+            # self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
 
 
     def finalizar_Minijuego(self, key):
@@ -275,7 +311,17 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
     def funcion_Mediapipe(self):
         global gestos, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada
+
+        #Variable de gestos
+        global imagenSuperpuestaPath
+
+        #Se crea la ventana
         cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        
+        # Crea una ventana con un nombre específico
+        cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
+        # Establece la propiedad de la ventana en pantalla completa
+        cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
         #Inicializador del detector de gestos
         options = GestureRecognizerOptions(
@@ -292,6 +338,16 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     break
                 height, width, _ = frame.shape
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+                #Imagen Superpuesta (directorio)
+                imagen_superpuesta = cv2.imread(imagenSuperpuestaPath)
+
+                # Asegura que la imagen superpuesta tenga el mismo tamaño que el framei
+                try:
+                    imagen_superpuesta = cv2.resize(imagen_superpuesta, (frame.shape[1], frame.shape[0]))
+                except cv2.error as e:
+                    print("Error al redimensionar la imagen: ", e)
+
                 
 
                 mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
@@ -381,6 +437,12 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 
                 if self.rompeCiclo == True:
                     break
+
+                # Combinar el frame y la imagen superpuesta
+                alpha = 0.0  # Opacidad 0 maximo 1 minimo
+                beta = 1 - alpha  # Peso del frame original
+                frame = cv2.addWeighted(frame, alpha, imagen_superpuesta, beta, 0)
+
                 cv2.imshow("Frame", frame)
         cap.release() #Libera los recursos de cv2.VideoCapture()
         cv2.destroyAllWindows()
@@ -576,7 +638,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
 
                 
-                cv2.imshow("Frame", frame)
+                cv2.imshow("Frame", frame)  
                 if cv2.waitKey(1) & 0xFF == 27:
                     break
                 if self.rompeCiclo == False:
