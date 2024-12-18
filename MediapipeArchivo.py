@@ -48,6 +48,7 @@ imagenSuperpuestaPath = "Imagenes\GestosEmojisMinijuego\Fondo.png"
 
 #Detecta el gesto y la lateralidad de las manos...
 def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
+  
   #print(type(result.gestures))
   global gestos, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada
   if (len(result.gestures) != 0):
@@ -56,6 +57,8 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
     puntoY = puntoY.y
     puntoX = result.hand_landmarks[0][0]
     puntoX = puntoX.x
+
+    
 
 
     #Estas variables se colocan en False para que la seleccion de la opcion se deseleccione al bajar la mano
@@ -268,38 +271,6 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
 
             
 
-
-
-
-
-            # #variable acumulativa para los indeces de la lista self.listaEsquinas
-            # self.inidiceListaEsquinas = 0
-
-            # #Lista con todas las esquinas de la pantalla
-            # self.listaEsquinas = ["esq1","esq2","esq3","esq4"]
-            
-            # #Cuando se presiona la tecla los cuadros de las esquinas desaparecen
-            # self.congelaEsquina1Comparacion = self.congelaEsquina2Comparacion = self.congelaEsquina3Comparacion = self.congelaEsquina4Comparacion = None
-
-            # #lista de las esquinas a activarse en orden aleatorio
-            # random.shuffle(self.listaEsquinas)
-
-            # # Cuenta regresiva del 3 al 1
-            # i = int
-            # for i in range(3, 0, -1):
-            #     self.cuenta3Seg = str(i)
-            #     time.sleep(1)
-            # self.cuenta3Seg = ""
-            # self.controladorIniciar_Detener = True
-
-            # #manda las variables para que se pongan en pantalla los cuadros de las esquinas con 1 seg de timing
-            # for j in self.listaEsquinas:
-            #     self.activadorEsquina = j
-            #     time.sleep(1)
-            # self.activadorEsquina = ""
-            # self.congelaEsquina1 = self.congelaEsquina2 = self.congelaEsquina3 = self.congelaEsquina4 = False
-
-
     def finalizar_Minijuego(self, key):
         if key == keyboard.KeyCode.from_char('f'):
             self.rompeCiclo = False
@@ -312,11 +283,13 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
     def funcion_Mediapipe(self):
         global gestos, puntoYDerecha, puntoYIzquierda, manoDerechaCerrada, manoIzquierdaCerrada
 
+        mp_drawing = mp.solutions.drawing_utils
+        mp_holistic = mp.solutions.holistic
         #Variable de gestos
         global imagenSuperpuestaPath
 
         #Se crea la ventana
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         
         # Crea una ventana con un nombre específico
         cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
@@ -338,6 +311,7 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     break
                 height, width, _ = frame.shape
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                
 
                 #Imagen Superpuesta (directorio)
                 imagen_superpuesta = cv2.imread(imagenSuperpuestaPath)
@@ -359,6 +333,9 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                 #Invierte la imagen
                 frame = cv2.flip(frame, 1)
                 
+                
+
+
                 #Texto en pantalla de manos cerradas
                 if str(gestos) == "Closed_Fist":
                     cv2.putText(frame, "Mano izquierda cerrada", (100, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
@@ -439,215 +416,17 @@ class VentanaPrincipal(QMainWindow): #Crea la ventana usando QDialog
                     break
 
                 # Combinar el frame y la imagen superpuesta
-                alpha = 0.0  # Opacidad 0 maximo 1 minimo
-                beta = 1 - alpha  # Peso del frame original
+                alpha = 1  # Opacidad 0 maximo 1 minimo
+                beta = 0 #- alpha  # Peso del frame original
                 frame = cv2.addWeighted(frame, alpha, imagen_superpuesta, beta, 0)
 
                 cv2.imshow("Frame", frame)
         cap.release() #Libera los recursos de cv2.VideoCapture()
         cv2.destroyAllWindows()
-        self.funcion_minijuego()
                 
 
 
 
-
-#-------------------------------------------------------------------------------------------------------------------------
-    def funcion_minijuego(self):
-        mp_drawing = mp.solutions.drawing_utils
-        mp_pose = mp.solutions.pose
-
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
-        # Crea una ventana con un nombre específico
-        cv2.namedWindow("Frame", cv2.WINDOW_NORMAL)
-
-        # Establece la propiedad de la ventana en pantalla completa
-        cv2.setWindowProperty("Frame", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-
-        #Estilo de font para la cuenta regresiva7
-        font = cv2.FONT_HERSHEY_DUPLEX
-        escala = 5
-        espesor = 9
-
-
-        with mp_pose.Pose(
-            static_image_mode=False,
-            model_complexity=0,
-            smooth_landmarks=True
-            ) as pose:
-
-            while True:
-                ret, frame = cap.read()
-                if ret == False:
-                    break
-                frame = cv2.flip(frame, 1)
-                height, width, _ = frame.shape
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                results = pose.process(frame_rgb)
-
-                if results.pose_landmarks is not None:
-                    mp_drawing.draw_landmarks(
-                        frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS,
-                        mp_drawing.DrawingSpec(color=(128, 0, 250), thickness=2, circle_radius=3),
-                        mp_drawing.DrawingSpec(color=(255, 255, 255), thickness=2))
-                    
-
-                    #Deteccion de esquinas
-                    puntoMuñecaIzquierda = results.pose_landmarks.landmark[20]
-                    puntoMuñecaDerecha = results.pose_landmarks.landmark[19]
-
-                    xI = puntoMuñecaIzquierda.x
-                    xD = puntoMuñecaDerecha.x
-
-                    yI= puntoMuñecaIzquierda.y
-                    yD = puntoMuñecaDerecha.y
-
-                    #Si este if pasa a ser False no se continuaran detectando las esquinas
-                    if self.controladorIniciar_Detener == True:
-                        #Esquina 1
-                        if ((xI <= 0.3 and yI <= 0.3) or (xD <= 0.3 and yD <= 0.3)) and self.congelaEsquina1Comparacion == None:
-                            self.variableComparar = "esq1"
-                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
-                                self.inidiceListaEsquinas += 1
-                                self.congelaEsquina1Comparacion = True
-
-                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
-                                self.congelaEsquina1Comparacion = False
-                    
-
-                        #Esquina 2
-                        if ((xI >= 0.7 and yI <= 0.3) or (xD >= 0.7 and yD <= 0.3)) and self.congelaEsquina2Comparacion == None:
-                            self.variableComparar = "esq2"
-                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
-                                self.inidiceListaEsquinas += 1
-                                self.congelaEsquina2Comparacion = True  
-
-                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
-                                self.congelaEsquina2Comparacion = False
-                        
-
-                        #Esquina 3
-                        if ((xI <= 0.3 and yI >= 0.7) or (xD <= 0.3 and yD >= 0.7)) and self.congelaEsquina3Comparacion == None:
-                            self.variableComparar = "esq3"
-                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
-                                self.inidiceListaEsquinas += 1
-                                self.congelaEsquina3Comparacion = True
-
-                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
-                                self.congelaEsquina3Comparacion = False
-                        
-
-                        #Esquina 4
-                        if ((xI >= 0.7 and yI >= 0.7) or (xD >= 0.7 and yD >= 0.7)) and self.congelaEsquina4Comparacion == None:
-                            self.variableComparar = "esq4"
-                            if self.listaEsquinas[self.inidiceListaEsquinas] == self.variableComparar:
-                                self.inidiceListaEsquinas += 1
-                                self.congelaEsquina4Comparacion = True
-
-                            elif self.listaEsquinas[self.inidiceListaEsquinas] != self.variableComparar:
-                                self.congelaEsquina4Comparacion = False
-                    
-
-                    cv2.putText(frame, f"Punto x: {str(xD)}", (100, 200), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    cv2.putText(frame, f"Punto y: {str(yD)}", (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-
-
-                #Pertenece a la esquina 1 (Coloca los cuadros verde y rojo respectivamente)
-                if self.congelaEsquina1Comparacion == True:
-                    cv2.rectangle(frame, (0, 0), (200, 200), (99, 191, 0), -1)
-                    
-
-                elif self.congelaEsquina1Comparacion == False:
-                    cv2.rectangle(frame, (0, 0), (200, 200), (49, 49, 255), -1)
-                    self.controladorIniciar_Detener = False
-
-
-                #Pertenece a la esquina 2 (Coloca los cuadros verde y rojo respectivamente)
-                if self.congelaEsquina2Comparacion == True:
-                    cv2.rectangle(frame, (width-200, 0), (width, 200), (99, 191, 0), -1)
-                    
-
-                elif self.congelaEsquina2Comparacion == False:
-                    cv2.rectangle(frame, (width-200, 0), (width, 200), (49, 49, 255), -1)
-                    self.controladorIniciar_Detener = False                
-
-                #Pertenece a la esquina 3 (Coloca los cuadros verde y rojo respectivamente)
-                if self.congelaEsquina3Comparacion == True:
-                    cv2.rectangle(frame, (0, height-200), (200, height), (99, 191, 0), -1)
-                    
-
-                elif self.congelaEsquina3Comparacion == False:
-                    cv2.rectangle(frame, (0, height-200), (200, height), (49, 49, 255), -1)
-                    self.controladorIniciar_Detener = False
-                
-
-                #Pertenece a la esquina 4 (Coloca los cuadros verde y rojo respectivamente)
-                if self.congelaEsquina4Comparacion == True:
-                    cv2.rectangle(frame, (width-200, height-200), (width, height), (99, 191, 0), -1)
-                    
-
-                elif self.congelaEsquina4Comparacion == False:
-                    cv2.rectangle(frame, (width-200, height-200), (width, height), (49, 49, 255), -1)
-                    self.controladorIniciar_Detener = False
-                    
-                
-
-
-
-
-
-
-                #Pone la cuenta regresiva en el centro de la pantalla
-                texto = f"{self.cuenta3Seg}"
-
-                # Obtener el tamaño del texto
-                tamano_texto, _ = cv2.getTextSize(texto, font, escala, espesor)
-
-                # Obtener las dimensiones de la imagen/frame
-                alto_frame, ancho_frame, _ = frame.shape
-
-                # Calcular las coordenadas del texto para que esté centrado
-                x = int((ancho_frame - tamano_texto[0]) / 2)
-                y = int((alto_frame + tamano_texto[1]) / 2)
-
-                # Dibujar el texto centrado en el frame
-                cv2.putText(frame, texto, (x, y), font, escala, (255, 255, 255), espesor)
-
-
-
-
-
-                #Muestra en pantalla las esquinas a memorizar
-                if self.activadorEsquina == "esq1" or self.congelaEsquina1 == True:
-                    cv2.rectangle(frame, (0, 0), (200, 200), (255, 158, 72), -1)  # Esquina superior izquierda
-                    self.congelaEsquina1 = True
-                
-                if self.activadorEsquina == "esq2" or self.congelaEsquina2 == True:
-                    cv2.rectangle(frame, (width-200, 0), (width, 200), (255, 158, 72), -1)  # Esquina superior derecha
-                    self.congelaEsquina2 = True
-
-                if self.activadorEsquina == "esq3" or self.congelaEsquina3 == True:
-                    cv2.rectangle(frame, (0, height-200), (200, height), (255, 158, 72), -1)  # Esquina inferior izquierda
-                    self.congelaEsquina3 = True
-
-                if self.activadorEsquina == "esq4" or self.congelaEsquina4 == True:
-                    cv2.rectangle(frame, (width-200, height-200), (width, height), (255, 158, 72), -1)  # Esquina inferior derecha
-                    self.congelaEsquina4 = True
-
-
-                
-                cv2.imshow("Frame", frame)  
-                if cv2.waitKey(1) & 0xFF == 27:
-                    break
-                if self.rompeCiclo == False:
-                    break
-                
-        cap.release() #Libera los recursos de cv2.VideoCapture()
-        cv2.destroyAllWindows()
-        self.funcion_Mediapipe()
-#-------------------------------------------------------------------------------------------------------------------------
 
 
 #Se ejecuta si el archivo se ejecuta directamente y no se importa como un modulo  
